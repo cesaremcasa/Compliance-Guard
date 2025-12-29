@@ -1,0 +1,20 @@
+
+# Ambientes virtuais
+venv/
+env/
+ENV/
+.venv/
+
+# Dados processados
+data/processed/
+data/raw/
+
+# Logs
+logs/
+
+# Arquivos estranhos (parecem ser de erro de instalação)
+=0.*
+=1.*
+=2.*
+=3.*
+=4.*

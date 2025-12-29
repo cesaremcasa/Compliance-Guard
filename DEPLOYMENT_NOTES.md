@@ -3,7 +3,7 @@
 ## Current Environment (T3 Logic)
 - **Instance Type:** AWS T3 (CPU)
 - **Role:** RAG Ingestion & Core API Testing
-- **API Endpoint:** http://:8000
+- **API Endpoint:** http://54.123.45.67:8000
 - **Data Location:** `data/processed/faiss_index.bin`
 
 ## Status
