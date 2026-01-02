@@ -5,6 +5,7 @@ import json
 import uuid
 from datetime import datetime
 from typing import Callable
+import requests
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -14,7 +15,7 @@ from pydantic import BaseModel, Field
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from src.rag.retriever import retriever_instance
-from src.llm_client import LLMClient
+# Nota: Não usamos mais LLMClient local, chamamos o vLLM direto via requests
 
 # --- 1. Structured JSON Logging Configuration ---
 
@@ -27,174 +28,107 @@ class JSONFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
-        
+
         if hasattr(record, 'props'):
             log_record.update(record.props)
-            
+
         if record.exc_info:
             log_record["exception"] = self.formatException(record.exc_info)
 
         return json.dumps(log_record)
 
-# Configure root logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
+# Configure Logger
+logger = logging.getLogger("compliance-guard")
+logger.setLevel(logging.INFO)
+ch = logging.StreamHandler()
+ch.setFormatter(JSONFormatter())
+logger.addHandler(ch)
 
-for handler in logger.handlers[:]:
-    logger.removeHandler(handler)
-    
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(JSONFormatter())
-logger.addHandler(stream_handler)
+# --- 2. Configuration & Initialization ---
 
-# --- 2. Middleware for Request ID ---
+# CONFIGURAÇÃO ATUALIZADA: Aponta para o modelo Fine-Tuned
+MODEL_NAME = "compliance-trained" 
+VLLM_API_URL = "http://localhost:8000/v1/completions"
 
-class LoggingMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next: Callable):
-        req_id = str(uuid.uuid4())
-        start_time = datetime.utcnow()
+app = FastAPI(title="Compliance Guard API", version="3.0")
+
+# --- 3. Middleware ---
+
+class RequestContextMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        request_id = str(uuid.uuid4())
         
-        request.state.request_id = req_id
-        
+        # Log request
+        logger.info("Incoming request", extra={
+            "props": {"request_id": request_id, "path": request.url.path, "method": request.method}
+        })
+
         response = await call_next(request)
         
-        process_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-        response.headers["X-Request-ID"] = req_id
-        
-        logger.info(
-            "Request processed", 
-            extra={
-                "props": {
-                    "request_id": req_id,
-                    "method": request.method,
-                    "path": request.url.path,
-                    "status_code": response.status_code,
-                    "latency_ms": round(process_time, 2),
-                    "user_ip": request.client.host if request.client else "unknown"
-                }
-            }
-        )
-        
+        # Add ID to response
+        response.headers["X-Request-ID"] = request_id
         return response
 
-app = FastAPI(
-    title="Compliance-Guard API",
-    description="API for retrieving compliance controls using RAG.",
-    version="0.3.0"
-)
+app.add_middleware(RequestContextMiddleware)
 
-app.add_middleware(LoggingMiddleware)
+# --- 4. Pydantic Models ---
 
-llm_client = LLMClient()
+class ComplianceRequest(BaseModel):
+    query: str = Field(..., description="The compliance question to ask")
 
-# --- Models ---
-class QueryRequest(BaseModel):
-    query: str = Field(..., description="The natural language query about compliance standards.", min_length=3)
-    top_k: int = Field(default=3, ge=1, le=10, description="Number of results to return.")
-
-class ControlResult(BaseModel):
-    control_id: str
+class ComplianceResponse(BaseModel):
+    request_id: str
+    answer: str
     source: str
-    content: str
 
-class QueryResponse(BaseModel):
-    query: str
-    results: list[ControlResult]
+# --- 5. Endpoints ---
 
-# --- Endpoints ---
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "model": MODEL_NAME}
 
-@app.get("/")
-def read_root():
-    return {"message": "Compliance-Guard API v3.0 (SRE Edition)"}
-
-@app.post("/compliance")
-def check_compliance(request: QueryRequest, http_request: Request):
-    req_id = http_request.state.request_id
+@app.post("/compliance", response_model=ComplianceResponse)
+async def get_compliance_guidance(request: Request, body: ComplianceRequest):
+    request_id = request.headers.get("X-Request-ID", "unknown")
     
     try:
-        logger.info(
-            "Compliance check started",
-            extra={"props": {"request_id": req_id, "query": request.query}}
-        )
-
-        # 1. RAG - CORREÇÃO USANDO k=k
-        rag_results = retriever_instance.search(query=request.query, k=request.top_k)
+        # 1. RAG: Retrieve Context
+        rag_docs = retriever_instance.retrieve(body.query, top_k=2)
+        context_text = "\n".join([doc['text'] for doc in rag_docs])
         
-        context_str = "\n".join([doc["content"] for doc in rag_results])
-
-        # 2. Prompt
-        system_instruction = (
-            "[INST] Você é um oficial de compliance especialista. "
-            "Analise o contexto fornecido e a entrada do usuário. "
-            "Determine se a entrada está em conformidade. "
-            "Responda APENAS em JSON válido: "
-            '{ "is_compliant": true/false, "reason": "string" }. '
-            "Não use markdown. [/INST]"
-        )
+        # 2. LLM: Construct Prompt
+        prompt = f"Context: {context_text}\n\nQuestion: {body.query}\n\nAnswer:"
         
-        final_prompt = f"{system_instruction}\n\nContexto:\n{context_str}\n\nEntrada do Usuário:\n{request.query}\n\nResposta:"
-
-        # 3. GPU
-        try:
-            llm_response_text = llm_client.generate(final_prompt)
-            gpu_status = "success"
-        except Exception as e:
-            logger.error(
-                "GPU connection failed",
-                exc_info=True,
-                extra={"props": {"request_id": req_id, "error": str(e)}}
-            )
-            llm_response_text = '{"is_compliant": false, "reason": "GPU Service Unavailable"}'
-            gpu_status = "failed"
-
-        # 4. Parse JSON
-        try:
-            clean_text = llm_response_text.replace("```json", "").replace("```", "").strip()
-            result_json = json.loads(clean_text)
-        except json.JSONDecodeError:
-            logger.warning(
-                "GPU failed to return valid JSON",
-                extra={"props": {"request_id": req_id}}
-            )
-            result_json = {
-                "is_compliant": False, 
-                "reason": "Erro de processamento: A GPU não retornou um JSON válido."
-            }
-
-        logger.info(
-            "Compliance check completed",
-            extra={"props": {"request_id": req_id, "gpu_status": gpu_status}}
-        )
-        
-        return {
-            "status": "success",
-            "request_id": req_id,
-            "query": request.query,
-            "rag_context_count": len(rag_results),
-            "compliance": result_json,
-            "gpu_used": True
+        # 3. LLM: Call vLLM (Fine-Tuned Model)
+        payload = {
+            "model": MODEL_NAME, # Usa o adapter "compliance-trained"
+            "prompt": prompt,
+            "max_tokens": 200,
+            "temperature": 0.1
         }
-
-    except Exception as e:
-        logger.error(
-            "Critical API error",
-            exc_info=True,
-            extra={"props": {"request_id": req_id}}
+        
+        # Chama o vLLM
+        llm_response = requests.post(VLLM_API_URL, json=payload, timeout=30)
+        llm_response.raise_for_status()
+        llm_data = llm_response.json()
+        
+        answer_text = llm_data['choices'][0]['text'].strip()
+        
+        logger.info("Request processed successfully", extra={"props": {"request_id": request_id}})
+        
+        return ComplianceResponse(
+            request_id=request_id,
+            answer=answer_text,
+            source="RAG + Fine-Tuned vLLM"
         )
-        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/query", response_model=QueryResponse)
-def query_controls(request: QueryRequest):
-    req_id = str(uuid.uuid4())
-    try:
-        # CORREÇÃO USANDO k=k
-        results = retriever_instance.search(query=request.query, k=request.top_k)
-        formatted_results = [
-            ControlResult(control_id=r['id'], source=r['source'], content=r['content'])
-            for r in results
-        ]
-        logger.info("Legacy query executed", extra={"props": {"request_id": req_id}})
-        return QueryResponse(query=request.query, results=formatted_results)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"vLLM connection error: {e}", extra={"props": {"request_id": request_id}})
+        raise HTTPException(status_code=503, detail="LLM Service Unavailable")
     except Exception as e:
-        logger.error("Legacy query failed", exc_info=True, extra={"props": {"request_id": req_id}})
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Unexpected error: {e}", extra={"props": {"request_id": request_id}})
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=3000)

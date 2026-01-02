@@ -18,3 +18,9 @@ logs/
 =2.*
 =3.*
 =4.*
+
+git add RESUMO_EXECUCAO_2025-01-02.md
+git add README.md
+git add src/api/main.py
+git add src/api/simple_server.py
+git add src/training/
