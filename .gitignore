@@ -24,3 +24,8 @@ git add README.md
 git add src/api/main.py
 git add src/api/simple_server.py
 git add src/training/
+
+# Large model files
+models/checkpoints/**/optimizer.pt
+models/checkpoints/**/scheduler.pt
+models/checkpoints/**/scaler.pt

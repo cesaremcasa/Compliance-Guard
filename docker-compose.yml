@@ -10,6 +10,8 @@ services:
       - "8000:8000"
     volumes:
       - ./models:/app/models
+      - cache-data:/tmp/compliance_cache
+      - feedback-data:/tmp/feedback
     restart: unless-stopped
     networks:
       - monitoring-network
@@ -53,3 +55,5 @@ networks:
 volumes:
   prometheus-data:
   grafana-data:
+  cache-data:
+  feedback-data:
