@@ -398,11 +398,11 @@ compliance-guard-gpu/
 
 ### Production Deployment Status
 
-![System Audit](system-audit)
+![System Audit](system-audit.png)
 
 ### GPU Resource Utilization
 
-![GPU Utilization](gpu-utilization)
+![GPU Utilization](gpu-utilization.png)
 
 
 ---
