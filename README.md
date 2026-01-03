@@ -398,15 +398,12 @@ compliance-guard-gpu/
 
 ### Production Deployment Status
 
-![System Audit - Docker Containers Running](https://via.placeholder.com/800x200/1a1a1a/00ff00?text=DOCKER+STATUS:+All+Containers+Healthy+-+Upload+Your+Screenshot+Here)
-
-*Replace this placeholder: Upload your first screenshot (system-audit.png) showing Docker container status*
+![System Audit](system-audit)
 
 ### GPU Resource Utilization
 
-![GPU Utilization - NVIDIA Tesla T4](https://via.placeholder.com/800x200/1a1a1a/00ff00?text=GPU+UTILIZATION:+NVIDIA+L4+13GB/23GB+-+Upload+Your+Screenshot+Here)
+![GPU Utilization](gpu-utilization)
 
-*Replace this placeholder: Upload your second screenshot (gpu-utilization.png) showing nvidia-smi output*
 
 ---
 
