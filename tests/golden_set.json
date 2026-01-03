@@ -1,0 +1,27 @@
+[
+    {
+        "id": "gs-001",
+        "question": "What are the requirements for access control in NIST 800-53?",
+        "expected_keywords": ["AC-1", "policy", "procedures"]
+    },
+    {
+        "id": "gs-002",
+        "question": "Explain the importance of Incident Response.",
+        "expected_keywords": ["IR-4", "handling", "incident"]
+    },
+    {
+        "id": "gs-003",
+        "question": "What is the definition of System and Communications Protection?",
+        "expected_keywords": ["SC-7", "boundary", "protection"]
+    },
+    {
+        "id": "gs-004",
+        "question": "Describe the Physical and Environmental Protection controls.",
+        "expected_keywords": ["PE-3", "physical", "access"]
+    },
+    {
+        "id": "gs-005",
+        "question": "How should Risk Assessment be conducted?",
+        "expected_keywords": ["RA-3", "risk", "assessment"]
+    }
+]

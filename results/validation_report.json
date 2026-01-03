@@ -1,0 +1,729 @@
+{
+  "summary": {
+    "total_items": 50,
+    "success_count": 48,
+    "success_rate_percentage": 96.0,
+    "average_latency_seconds": 8.6189
+  },
+  "details": [
+    {
+      "id": 1,
+      "status": "success",
+      "latency_seconds": 10.0087,
+      "keywords_found": [
+        "account management",
+        "automated mechanisms"
+      ],
+      "keywords_expected": [
+        "account management",
+        "automated mechanisms",
+        "disable inactive",
+        "90 days"
+      ]
+    },
+    {
+      "id": 2,
+      "status": "success",
+      "latency_seconds": 8.9117,
+      "keywords_found": [
+        "approved authorizations",
+        "logical access"
+      ],
+      "keywords_expected": [
+        "access enforcement",
+        "approved authorizations",
+        "logical access",
+        "information flow"
+      ]
+    },
+    {
+      "id": 3,
+      "status": "success",
+      "latency_seconds": 8.9494,
+      "keywords_found": [
+        "information flow",
+        "security policy",
+        "filters"
+      ],
+      "keywords_expected": [
+        "information flow",
+        "security policy",
+        "filters",
+        "enforce approved"
+      ]
+    },
+    {
+      "id": 4,
+      "status": "success",
+      "latency_seconds": 8.9625,
+      "keywords_found": [
+        "separation of duties",
+        "access control",
+        "least privilege"
+      ],
+      "keywords_expected": [
+        "separation of duties",
+        "access control",
+        "conflicting duties",
+        "least privilege"
+      ]
+    },
+    {
+      "id": 5,
+      "status": "success",
+      "latency_seconds": 8.9949,
+      "keywords_found": [
+        "least privilege",
+        "explicit prohibit",
+        "unnecessary privileges"
+      ],
+      "keywords_expected": [
+        "least privilege",
+        "explicit prohibit",
+        "unnecessary privileges",
+        "users processes"
+      ]
+    },
+    {
+      "id": 6,
+      "status": "success",
+      "latency_seconds": 8.9389,
+      "keywords_found": [
+        "unsuccessful logon",
+        "lockout duration",
+        "automated response"
+      ],
+      "keywords_expected": [
+        "unsuccessful logon",
+        "lockout duration",
+        "automated response",
+        "threshold"
+      ]
+    },
+    {
+      "id": 7,
+      "status": "error_400",
+      "error": "{\"detail\":\"Forbidden keywords: ['system']\"}"
+    },
+    {
+      "id": 8,
+      "status": "success",
+      "latency_seconds": 8.9433,
+      "keywords_found": [
+        "concurrent sessions",
+        "per user"
+      ],
+      "keywords_expected": [
+        "concurrent sessions",
+        "limit sessions",
+        "per user",
+        "monitoring control"
+      ]
+    },
+    {
+      "id": 9,
+      "status": "success",
+      "latency_seconds": 8.9647,
+      "keywords_found": [
+        "session lock",
+        "pattern-hiding"
+      ],
+      "keywords_expected": [
+        "session lock",
+        "pattern-hiding",
+        "inactivity period",
+        "retain until"
+      ]
+    },
+    {
+      "id": 10,
+      "status": "success",
+      "latency_seconds": 8.9437,
+      "keywords_found": [
+        "wireless access"
+      ],
+      "keywords_expected": [
+        "wireless access",
+        "authentication encryption",
+        "monitor control",
+        "unauthorized use"
+      ]
+    },
+    {
+      "id": 11,
+      "status": "success",
+      "latency_seconds": 8.955,
+      "keywords_found": [
+        "audit events"
+      ],
+      "keywords_expected": [
+        "audit events",
+        "organization-defined",
+        "successful unsuccessful",
+        "risk assessment"
+      ]
+    },
+    {
+      "id": 12,
+      "status": "success",
+      "latency_seconds": 8.9176,
+      "keywords_found": [
+        "audit records",
+        "timestamps",
+        "event types"
+      ],
+      "keywords_expected": [
+        "audit records",
+        "timestamps",
+        "event types",
+        "user identities"
+      ]
+    },
+    {
+      "id": 13,
+      "status": "success",
+      "latency_seconds": 8.941,
+      "keywords_found": [
+        "audit storage",
+        "overflow handling"
+      ],
+      "keywords_expected": [
+        "audit storage",
+        "capacity allocation",
+        "overflow handling",
+        "prevent loss"
+      ]
+    },
+    {
+      "id": 14,
+      "status": "success",
+      "latency_seconds": 8.946,
+      "keywords_found": [
+        "audit processing failures"
+      ],
+      "keywords_expected": [
+        "audit processing failures",
+        "alert personnel",
+        "automated actions",
+        "shutdown overwrite"
+      ]
+    },
+    {
+      "id": 15,
+      "status": "success",
+      "latency_seconds": 8.9507,
+      "keywords_found": [
+        "audit log review",
+        "frequency"
+      ],
+      "keywords_expected": [
+        "audit log review",
+        "frequency",
+        "correlation analysis",
+        "real-time alerts"
+      ]
+    },
+    {
+      "id": 16,
+      "status": "success",
+      "latency_seconds": 9.0085,
+      "keywords_found": [
+        "report generation",
+        "non-repudiation"
+      ],
+      "keywords_expected": [
+        "audit reduction",
+        "report generation",
+        "non-repudiation",
+        "original records"
+      ]
+    },
+    {
+      "id": 17,
+      "status": "success",
+      "latency_seconds": 8.9394,
+      "keywords_found": [
+        "time stamps",
+        "authoritative source",
+        "synchronization"
+      ],
+      "keywords_expected": [
+        "time stamps",
+        "authoritative source",
+        "synchronization",
+        "internal clocks"
+      ]
+    },
+    {
+      "id": 18,
+      "status": "success",
+      "latency_seconds": 8.9397,
+      "keywords_found": [
+        "access controls"
+      ],
+      "keywords_expected": [
+        "protect audit information",
+        "access controls",
+        "hardware software",
+        "cryptographic"
+      ]
+    },
+    {
+      "id": 19,
+      "status": "success",
+      "latency_seconds": 8.9407,
+      "keywords_found": [
+        "non-repudiation",
+        "digital signatures"
+      ],
+      "keywords_expected": [
+        "non-repudiation",
+        "digital signatures",
+        "audit records",
+        "integrity assurance"
+      ]
+    },
+    {
+      "id": 20,
+      "status": "success",
+      "latency_seconds": 8.9508,
+      "keywords_found": [
+        "audit record retention"
+      ],
+      "keywords_expected": [
+        "audit record retention",
+        "organization-defined period",
+        "legal requirements",
+        "dispose securely"
+      ]
+    },
+    {
+      "id": 21,
+      "status": "success",
+      "latency_seconds": 8.942,
+      "keywords_found": [
+        "boundary protection"
+      ],
+      "keywords_expected": [
+        "boundary protection",
+        "firewalls gateways",
+        "monitor control",
+        "external interfaces"
+      ]
+    },
+    {
+      "id": 22,
+      "status": "success",
+      "latency_seconds": 8.9449,
+      "keywords_found": [
+        "transmission confidentiality",
+        "integrity protection"
+      ],
+      "keywords_expected": [
+        "transmission confidentiality",
+        "integrity protection",
+        "cryptographic",
+        "alternative safeguards"
+      ]
+    },
+    {
+      "id": 23,
+      "status": "success",
+      "latency_seconds": 8.9711,
+      "keywords_found": [
+        "network disconnect",
+        "timeout periods"
+      ],
+      "keywords_expected": [
+        "network disconnect",
+        "timeout periods",
+        "idle sessions",
+        "terminate connections"
+      ]
+    },
+    {
+      "id": 24,
+      "status": "success",
+      "latency_seconds": 8.952,
+      "keywords_found": [
+        "cryptographic key"
+      ],
+      "keywords_expected": [
+        "cryptographic key",
+        "establishment management",
+        "secure generation",
+        "distribution storage"
+      ]
+    },
+    {
+      "id": 25,
+      "status": "success",
+      "latency_seconds": 8.9658,
+      "keywords_found": [
+        "FIPS-validated",
+        "cryptographic modules"
+      ],
+      "keywords_expected": [
+        "FIPS-validated",
+        "cryptographic modules",
+        "confidentiality integrity",
+        "security strength"
+      ]
+    },
+    {
+      "id": 26,
+      "status": "success",
+      "latency_seconds": 8.9538,
+      "keywords_found": [
+        "public key infrastructure",
+        "certificates"
+      ],
+      "keywords_expected": [
+        "public key infrastructure",
+        "certificates",
+        "issue manage",
+        "validation revocation"
+      ]
+    },
+    {
+      "id": 27,
+      "status": "success",
+      "latency_seconds": 8.9574,
+      "keywords_found": [
+        "mobile code",
+        "usage restrictions"
+      ],
+      "keywords_expected": [
+        "mobile code",
+        "usage restrictions",
+        "risk assessment",
+        "authorize monitor"
+      ]
+    },
+    {
+      "id": 28,
+      "status": "success",
+      "latency_seconds": 8.9396,
+      "keywords_found": [
+        "voice over IP",
+        "protections"
+      ],
+      "keywords_expected": [
+        "voice over IP",
+        "protections",
+        "confidentiality integrity",
+        "signaling media"
+      ]
+    },
+    {
+      "id": 29,
+      "status": "success",
+      "latency_seconds": 8.9381,
+      "keywords_found": [
+        "address resolution"
+      ],
+      "keywords_expected": [
+        "secure name resolution",
+        "address resolution",
+        "authoritative source",
+        "data integrity"
+      ]
+    },
+    {
+      "id": 30,
+      "status": "success",
+      "latency_seconds": 8.9425,
+      "keywords_found": [
+        "session authenticity",
+        "cryptographic techniques"
+      ],
+      "keywords_expected": [
+        "session authenticity",
+        "cryptographic techniques",
+        "protect authenticity",
+        "invalidate keys"
+      ]
+    },
+    {
+      "id": 31,
+      "status": "success",
+      "latency_seconds": 8.9667,
+      "keywords_found": [
+        "flaw remediation"
+      ],
+      "keywords_expected": [
+        "flaw remediation",
+        "scanning patching",
+        "identify report",
+        "correct flaws"
+      ]
+    },
+    {
+      "id": 32,
+      "status": "success",
+      "latency_seconds": 8.9452,
+      "keywords_found": [
+        "malicious code protection",
+        "antivirus updates"
+      ],
+      "keywords_expected": [
+        "malicious code protection",
+        "antivirus updates",
+        "scan detect",
+        "block quarantine"
+      ]
+    },
+    {
+      "id": 33,
+      "status": "error_400",
+      "error": "{\"detail\":\"Forbidden keywords: ['system']\"}"
+    },
+    {
+      "id": 34,
+      "status": "success",
+      "latency_seconds": 8.9446,
+      "keywords_found": [
+        "security alerts"
+      ],
+      "keywords_expected": [
+        "security alerts",
+        "advisories directives",
+        "receive disseminate",
+        "implement actions"
+      ]
+    },
+    {
+      "id": 35,
+      "status": "success",
+      "latency_seconds": 8.9575,
+      "keywords_found": [
+        "integrity checking"
+      ],
+      "keywords_expected": [
+        "integrity checking",
+        "software firmware",
+        "detect unauthorized",
+        "baseline comparison"
+      ]
+    },
+    {
+      "id": 36,
+      "status": "success",
+      "latency_seconds": 8.945,
+      "keywords_found": [
+        "spam protection"
+      ],
+      "keywords_expected": [
+        "spam protection",
+        "detect prevent",
+        "email web",
+        "update signatures"
+      ]
+    },
+    {
+      "id": 37,
+      "status": "success",
+      "latency_seconds": 8.955,
+      "keywords_found": [
+        "input validation",
+        "prevent invalid"
+      ],
+      "keywords_expected": [
+        "input validation",
+        "prevent invalid",
+        "check validity",
+        "reject sanitize"
+      ]
+    },
+    {
+      "id": 38,
+      "status": "success",
+      "latency_seconds": 8.9578,
+      "keywords_found": [
+        "error handling",
+        "information disclosure"
+      ],
+      "keywords_expected": [
+        "error handling",
+        "information disclosure",
+        "generate messages",
+        "avoid sensitive"
+      ]
+    },
+    {
+      "id": 39,
+      "status": "success",
+      "latency_seconds": 8.9695,
+      "keywords_found": [
+        "memory protection",
+        "address space",
+        "layout randomization"
+      ],
+      "keywords_expected": [
+        "memory protection",
+        "address space",
+        "layout randomization",
+        "prevent exploitation"
+      ]
+    },
+    {
+      "id": 40,
+      "status": "success",
+      "latency_seconds": 8.9569,
+      "keywords_found": [
+        "configuration management"
+      ],
+      "keywords_expected": [
+        "configuration management",
+        "policy procedures",
+        "develop document",
+        "disseminate review"
+      ]
+    },
+    {
+      "id": 41,
+      "status": "success",
+      "latency_seconds": 8.9679,
+      "keywords_found": [
+        "baseline configuration",
+        "approvals"
+      ],
+      "keywords_expected": [
+        "baseline configuration",
+        "maintain update",
+        "approvals",
+        "as-built documentation"
+      ]
+    },
+    {
+      "id": 42,
+      "status": "success",
+      "latency_seconds": 8.98,
+      "keywords_found": [
+        "change control"
+      ],
+      "keywords_expected": [
+        "change control",
+        "testing validation",
+        "approve reject",
+        "document changes"
+      ]
+    },
+    {
+      "id": 43,
+      "status": "success",
+      "latency_seconds": 8.9724,
+      "keywords_found": [
+        "security impact analysis"
+      ],
+      "keywords_expected": [
+        "security impact analysis",
+        "system changes",
+        "assess impact",
+        "before implementation"
+      ]
+    },
+    {
+      "id": 44,
+      "status": "success",
+      "latency_seconds": 8.9694,
+      "keywords_found": [
+        "access restrictions",
+        "configuration changes"
+      ],
+      "keywords_expected": [
+        "access restrictions",
+        "configuration changes",
+        "enforce authorize",
+        "audit logging"
+      ]
+    },
+    {
+      "id": 45,
+      "status": "success",
+      "latency_seconds": 8.9656,
+      "keywords_found": [
+        "cryptography management",
+        "configuration items"
+      ],
+      "keywords_expected": [
+        "cryptography management",
+        "configuration items",
+        "protect confidentiality",
+        "key management"
+      ]
+    },
+    {
+      "id": 46,
+      "status": "success",
+      "latency_seconds": 8.9713,
+      "keywords_found": [
+        "incident response"
+      ],
+      "keywords_expected": [
+        "incident response",
+        "policy procedures",
+        "develop distribute",
+        "review update"
+      ]
+    },
+    {
+      "id": 47,
+      "status": "success",
+      "latency_seconds": 8.9728,
+      "keywords_found": [
+        "incident response training",
+        "simulated events"
+      ],
+      "keywords_expected": [
+        "incident response training",
+        "simulated events",
+        "provide conduct",
+        "test capabilities"
+      ]
+    },
+    {
+      "id": 48,
+      "status": "success",
+      "latency_seconds": 8.9783,
+      "keywords_found": [
+        "incident response testing",
+        "tabletop exercises"
+      ],
+      "keywords_expected": [
+        "incident response testing",
+        "tabletop exercises",
+        "conduct test",
+        "evaluate effectiveness"
+      ]
+    },
+    {
+      "id": 49,
+      "status": "success",
+      "latency_seconds": 8.9722,
+      "keywords_found": [
+        "incident monitoring"
+      ],
+      "keywords_expected": [
+        "incident monitoring",
+        "tools techniques",
+        "detect report",
+        "automated mechanisms"
+      ]
+    },
+    {
+      "id": 50,
+      "status": "success",
+      "latency_seconds": 8.982,
+      "keywords_found": [
+        "incident reporting"
+      ],
+      "keywords_expected": [
+        "incident reporting",
+        "timelines recipients",
+        "report to",
+        "internal external"
+      ]
+    }
+  ]
+}
