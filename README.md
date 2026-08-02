@@ -99,7 +99,7 @@ Compliance Guard automates NIST cybersecurity compliance analysis using a fine-t
 **3. Grafana**
 - Real-time dashboard visualization
 - Pre-configured datasource
-- Admin credentials: admin/admin
+- Credentials: set GF_SECURITY_ADMIN_USER and GF_SECURITY_ADMIN_PASSWORD
 
 ---
 
@@ -197,8 +197,8 @@ Compliance Guard automates NIST cybersecurity compliance analysis using a fine-t
 
 **1. Clone Repository**
 ```bash
-git clone https://github.com/cesaremcasa/compliance-guard.git
-cd compliance-guard-gpu
+git clone https://github.com/cesaremcasa/Compliance-Guard.git
+cd Compliance-Guard
 ```
 
 **2. Build and Start Services**
@@ -327,8 +327,8 @@ Internal statistics endpoint.
 Access at `http://localhost:3000`
 
 **Default Credentials**
-- Username: admin
-- Password: admin
+- Username: from GF_SECURITY_ADMIN_USER
+- Password: from GF_SECURITY_ADMIN_PASSWORD
 
 **Available Metrics**
 - Request rate (req/s)
@@ -360,7 +360,7 @@ sum(rate(compliance_request_total[1m])) by (status)
 
 ## Project Structure
 ```
-compliance-guard-gpu/
+Compliance-Guard/
 ├── src/
 │   ├── api/
 │   │   ├── __init__.py
