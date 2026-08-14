@@ -4,6 +4,7 @@ import logging
 import hashlib
 import json
 from datetime import datetime
+from threading import Lock
 from typing import Optional
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
@@ -14,7 +15,7 @@ from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTEN
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 BASE_MODEL_ID = "mistralai/Mistral-7B-v0.1"
 LORA_ADAPTER_PATH = "models/checkpoints"
@@ -22,6 +23,8 @@ FORBIDDEN_KEYWORDS = ["ignore", "jailbreak", "system", "instructions"]
 MAX_INPUT_LENGTH = 500
 RATE_LIMIT = "10/minute"
 CACHE_DIR = "/tmp/compliance_cache"
+MAX_API_BODY_BYTES = 16 * 1024
+MAX_FEEDBACK_STORAGE_BYTES = 5 * 1024 * 1024
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ComplianceGuardv3_Final")
@@ -39,12 +42,41 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 class GenerateRequest(BaseModel):
-    text: str
+    text: str = Field(min_length=1, max_length=MAX_INPUT_LENGTH)
+
+    class Config:
+        extra = "forbid"
 
 class FeedbackRequest(BaseModel):
-    request_id: str
-    rating: int
-    comment: Optional[str] = None
+    request_id: str = Field(min_length=1, max_length=128)
+    rating: int = Field(ge=1, le=5)
+    comment: Optional[str] = Field(default=None, max_length=1000)
+
+    class Config:
+        extra = "forbid"
+
+
+@app.middleware("http")
+async def limit_mutation_body(request: Request, call_next):
+    """Buffer only bounded JSON payloads before FastAPI parses them."""
+    if request.method == "POST" and request.url.path in {"/generate", "/feedback"}:
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > MAX_API_BODY_BYTES:
+                    return JSONResponse(status_code=413, content={"detail": "Request body is too large"})
+            except ValueError:
+                return JSONResponse(status_code=400, content={"detail": "Invalid Content-Length"})
+        chunks: list[bytes] = []
+        total = 0
+        async for chunk in request.stream():
+            total += len(chunk)
+            if total > MAX_API_BODY_BYTES:
+                return JSONResponse(status_code=413, content={"detail": "Request body is too large"})
+            chunks.append(chunk)
+        # BaseHTTPMiddleware replays this cached body to the downstream handler.
+        request._body = b"".join(chunks)
+    return await call_next(request)
 
 class SimpleCache:
     def __init__(self, cache_dir: str):
@@ -74,14 +106,21 @@ class SimpleCache:
 cache = SimpleCache(CACHE_DIR)
 
 class FeedbackStore:
-    def __init__(self, feedback_dir: str = "/tmp/feedback"):
+    def __init__(self, feedback_dir: str = "/tmp/feedback", max_bytes: int = MAX_FEEDBACK_STORAGE_BYTES):
         self.feedback_dir = feedback_dir
+        self.max_bytes = max_bytes
+        self._lock = Lock()
         os.makedirs(feedback_dir, exist_ok=True)
         self.feedback_file = os.path.join(feedback_dir, "feedback.jsonl")
     
     def save_feedback(self, feedback: dict):
-        with open(self.feedback_file, 'a') as f:
-            f.write(json.dumps(feedback) + '\n')
+        encoded = (json.dumps(feedback) + "\n").encode("utf-8")
+        with self._lock:
+            current_size = os.path.getsize(self.feedback_file) if os.path.exists(self.feedback_file) else 0
+            if current_size + len(encoded) > self.max_bytes:
+                raise RuntimeError("Feedback storage capacity reached")
+            with open(self.feedback_file, "ab") as f:
+                f.write(encoded)
         logger.info(f"Feedback saved: {feedback['request_id']}")
 
 feedback_store = FeedbackStore()
@@ -198,10 +237,8 @@ async def generate_text(request: Request, body: GenerateRequest):
         ACTIVE_REQUESTS.dec()
 
 @app.post("/feedback")
-async def submit_feedback(feedback: FeedbackRequest):
-    if feedback.rating < 1 or feedback.rating > 5:
-        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5")
-    
+@limiter.limit("5/minute")
+async def submit_feedback(request: Request, feedback: FeedbackRequest):
     feedback_data = {
         "request_id": feedback.request_id,
         "rating": feedback.rating,
@@ -209,7 +246,10 @@ async def submit_feedback(feedback: FeedbackRequest):
         "timestamp": datetime.utcnow().isoformat()
     }
     
-    feedback_store.save_feedback(feedback_data)
+    try:
+        feedback_store.save_feedback(feedback_data)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail="Feedback storage is temporarily unavailable") from exc
     FEEDBACK_COUNT.labels(rating=str(feedback.rating)).inc()
     
     return {"status": "success", "message": "Feedback received. Thank you!"}
