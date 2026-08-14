@@ -1,5 +1,8 @@
 
 # Ambientes virtuais
+.env
+.env.*
+!.env.example
 venv/
 env/
 ENV/
