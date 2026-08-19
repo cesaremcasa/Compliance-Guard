@@ -1,0 +1,4 @@
+# Local/CI test and lint dependencies.
+pytest
+ruff
+httpx2

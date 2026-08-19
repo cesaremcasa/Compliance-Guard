@@ -1,0 +1,7 @@
+# Optional dependencies for COMPLIANCE_GUARD_BACKEND=real.
+# These are intentionally separate from the CPU-only quickstart.
+torch
+transformers
+accelerate
+peft
+bitsandbytes
