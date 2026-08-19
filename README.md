@@ -139,8 +139,13 @@ python3 scripts/run_golden_set.py
 ```
 
 This reports deterministic fixture/contract checks for the checked-in
-`tests/golden_set.json`; it is not a semantic accuracy score. Run the unit
-tests with `pytest -q`.
+`tests/golden_set.json`; it is not a semantic accuracy score. Install the
+development test tools and run the unit tests with `pytest -q`:
+
+```bash
+python -m pip install -r requirements-dev.txt
+pytest -q
+```
 
 The older `scripts/run_batch_validation.py` remains as a server-based
 `/generate` compatibility check.
