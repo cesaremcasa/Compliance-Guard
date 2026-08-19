@@ -10,6 +10,8 @@ services:
       - ./models:/app/models
       - cache-data:/tmp/compliance_cache
       - feedback-data:/tmp/feedback
+    environment:
+      COMPLIANCE_GUARD_BACKEND: ${COMPLIANCE_GUARD_BACKEND:-fake}
     restart: unless-stopped
     networks:
       - monitoring-network

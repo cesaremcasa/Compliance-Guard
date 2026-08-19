@@ -1,9 +1,7 @@
+# Core API (CPU-only fake backend and health/contract tests)
 fastapi
 uvicorn
+prometheus-client
+slowapi
 requests
 python-multipart
-langchain-community
-langchain
-langchain-huggingface
-faiss-cpu
-sentence-transformers

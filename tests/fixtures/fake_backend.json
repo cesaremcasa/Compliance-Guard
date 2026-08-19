@@ -1,0 +1,167 @@
+{
+  "framework": "NIST SP 800-53 Rev. 5",
+  "cases": [
+    {
+      "query": "What are the detailed requirements for implementing account management processes in AC-2, including automated mechanisms for disabling inactive accounts?",
+      "text": "Fixture AC-2 guidance: account management should define the account lifecycle, use automated mechanisms where appropriate, and disable inactive accounts according to the organization-defined period. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "AC-2",
+          "status": "fixture",
+          "summary": "Account management and inactive-account handling are represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "AC-2",
+          "locator": "AC-2"
+        }
+      ]
+    },
+    {
+      "query": "What specific audit events must be recorded under AU-2, including the rationale for selecting those events?",
+      "text": "Fixture AU-2 guidance: identify organization-defined audit events using a documented risk assessment, including relevant successful and unsuccessful events. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "AU-2",
+          "status": "fixture",
+          "summary": "Audit-event selection is represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "AU-2",
+          "locator": "AU-2"
+        }
+      ]
+    },
+    {
+      "query": "Explain the input validation controls in SI-10 to prevent invalid inputs.",
+      "text": "Fixture SI-10 guidance: check input validity and reject or sanitize invalid input before it is processed. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "SI-10",
+          "status": "fixture",
+          "summary": "Input validation is represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "SI-10",
+          "locator": "SI-10"
+        }
+      ]
+    },
+    {
+      "query": "Describe the incident response policy and procedures in IR-1.",
+      "text": "Fixture IR-1 guidance: document, distribute, review, and update incident response policy and procedures. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "IR-1",
+          "status": "fixture",
+          "summary": "Incident response policy is represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "IR-1",
+          "locator": "IR-1"
+        }
+      ]
+    },
+    {
+      "query": "What are the requirements for access control in NIST 800-53?",
+      "text": "Fixture AC-1 guidance: establish access control policy and procedures for the NIST 800-53 access control family. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "AC-1",
+          "status": "fixture",
+          "summary": "Access control policy and procedures are represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "AC-1",
+          "locator": "AC-1"
+        }
+      ]
+    },
+    {
+      "query": "Explain the importance of Incident Response.",
+      "text": "Fixture IR-4 guidance: incident handling supports detection, response, and recovery from incidents. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "IR-4",
+          "status": "fixture",
+          "summary": "Incident handling is represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "IR-4",
+          "locator": "IR-4"
+        }
+      ]
+    },
+    {
+      "query": "What is the definition of System and Communications Protection?",
+      "text": "Fixture SC-7 guidance: system and communications protection includes boundary protection controls. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "SC-7",
+          "status": "fixture",
+          "summary": "Boundary protection is represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "SC-7",
+          "locator": "SC-7"
+        }
+      ]
+    },
+    {
+      "query": "Describe the Physical and Environmental Protection controls.",
+      "text": "Fixture PE-3 guidance: physical and environmental protection includes physical access controls. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "PE-3",
+          "status": "fixture",
+          "summary": "Physical access is represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "PE-3",
+          "locator": "PE-3"
+        }
+      ]
+    },
+    {
+      "query": "How should Risk Assessment be conducted?",
+      "text": "Fixture RA-3 guidance: risk assessment should define a repeatable process for identifying and documenting risk. This fixture is for API contract tests, not a compliance determination.",
+      "findings": [
+        {
+          "control_id": "RA-3",
+          "status": "fixture",
+          "summary": "Risk assessment is represented by a deterministic fixture."
+        }
+      ],
+      "citations": [
+        {
+          "source": "NIST SP 800-53 Rev. 5",
+          "control_id": "RA-3",
+          "locator": "RA-3"
+        }
+      ]
+    }
+  ]
+}

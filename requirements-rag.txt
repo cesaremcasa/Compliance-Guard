@@ -1,0 +1,6 @@
+# Optional dependencies for the legacy RAG ingestion/retrieval adapters.
+langchain-community
+langchain
+langchain-huggingface
+faiss-cpu
+sentence-transformers
