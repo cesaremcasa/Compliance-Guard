@@ -11,6 +11,7 @@ import hashlib
 import json
 import logging
 import os
+import string
 import time
 import uuid
 from collections import defaultdict, deque
@@ -64,6 +65,10 @@ RATE_LIMIT = int(os.getenv("COMPLIANCE_GUARD_RATE_LIMIT", "10"))
 FEEDBACK_RATE_LIMIT = int(os.getenv("COMPLIANCE_GUARD_FEEDBACK_RATE_LIMIT", "5"))
 RATE_WINDOW_SECONDS = 60.0
 CACHE_DIR = os.getenv("COMPLIANCE_GUARD_CACHE_DIR", "/tmp/compliance_cache")
+CACHE_MAX_ENTRIES = int(os.getenv("COMPLIANCE_GUARD_CACHE_MAX_ENTRIES", "1000"))
+CACHE_MAX_BYTES = int(
+    os.getenv("COMPLIANCE_GUARD_CACHE_MAX_BYTES", str(64 * 1024 * 1024))
+)
 FEEDBACK_DIR = os.getenv("COMPLIANCE_GUARD_FEEDBACK_DIR", "/tmp/feedback")
 MAX_FEEDBACK_STORAGE_BYTES = 5 * 1024 * 1024
 
@@ -137,10 +142,23 @@ class SlidingWindowRateLimiter:
 
 
 class SimpleCache:
-    """Bounded-input, disk-backed exact-match cache with atomic writes."""
+    """Bounded-input, disk-backed exact-match cache with atomic writes.
 
-    def __init__(self, cache_dir: str) -> None:
+    Eviction is deterministic (oldest mtime, then filename) and only considers
+    cache files matching the generated 32-character MD5 ``.json`` name.
+    """
+
+    def __init__(
+        self,
+        cache_dir: str,
+        max_entries: int = CACHE_MAX_ENTRIES,
+        max_bytes: int = CACHE_MAX_BYTES,
+    ) -> None:
+        if max_entries < 1 or max_bytes < 1:
+            raise ValueError("cache limits must be positive")
         self.cache_dir = Path(cache_dir)
+        self.max_entries = max_entries
+        self.max_bytes = max_bytes
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._lock = Lock()
 
@@ -148,6 +166,44 @@ class SimpleCache:
     def _cache_key(text: str) -> str:
         # Keep the MD5 key shape used by the v3 adapter for cache compatibility.
         return hashlib.md5(text.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _is_cache_file(path: Path) -> bool:
+        return (
+            path.is_file()
+            and path.suffix == ".json"
+            and len(path.stem) == 32
+            and all(char in string.hexdigits.lower() for char in path.stem)
+        )
+
+    def _cache_files_locked(self) -> List[Tuple[int, str, Path, int]]:
+        files: List[Tuple[int, str, Path, int]] = []
+        for path in self.cache_dir.glob("*.json"):
+            if not self._is_cache_file(path):
+                continue
+            try:
+                stat = path.stat()
+            except OSError:
+                continue
+            files.append((stat.st_mtime_ns, path.name, path, stat.st_size))
+        files.sort(key=lambda item: (item[0], item[1]))
+        return files
+
+    def _evict_locked(self) -> None:
+        files = self._cache_files_locked()
+        total_bytes = sum(item[3] for item in files)
+        while files and (
+            len(files) > self.max_entries or total_bytes > self.max_bytes
+        ):
+            _mtime, _name, victim, size = files.pop(0)
+            try:
+                victim.unlink()
+            except FileNotFoundError:
+                continue
+            except OSError as exc:
+                logger.warning("Could not evict cache entry %s: %s", victim, exc)
+                continue
+            total_bytes -= size
 
     def get(self, text: str) -> Optional[Dict[str, Any]]:
         path = self.cache_dir / f"{self._cache_key(text)}.json"
@@ -165,11 +221,13 @@ class SimpleCache:
         path = self.cache_dir / f"{self._cache_key(text)}.json"
         temp_path = path.with_suffix(".json.tmp")
         with self._lock:
+            self._evict_locked()
             try:
                 with temp_path.open("w", encoding="utf-8") as handle:
                     json.dump(value, handle, ensure_ascii=False)
                 os.replace(temp_path, path)
-            except OSError as exc:
+                self._evict_locked()
+            except (OSError, TypeError) as exc:
                 logger.warning("Could not persist cache entry %s: %s", path, exc)
                 try:
                     temp_path.unlink(missing_ok=True)

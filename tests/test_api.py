@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -49,7 +50,8 @@ def test_analyze_returns_structured_fixture(client):
 
 
 def test_generate_preserves_legacy_response_and_marks_deprecated(client):
-    response = client.post("/generate", json={"text": "Describe AC-2 account management."})
+    request = {"text": "Describe AC-2 account management."}
+    response = client.post("/generate", json=request)
 
     assert response.status_code == 200
     payload = response.json()
@@ -58,14 +60,65 @@ def test_generate_preserves_legacy_response_and_marks_deprecated(client):
     assert response.headers["deprecation"] == "true"
     assert response.headers["x-compliance-guard-deprecated"] == "true"
 
+    cached = client.post("/generate", json=request)
+    assert cached.status_code == 200
+    assert cached.json()["cached"] is True
+    assert cached.json()["generated_text"] == payload["generated_text"]
+
 
 def test_legacy_compliance_adapter_keeps_query_contract(client):
-    response = client.post("/compliance", json={"query": "What is AC-2?"})
+    request = {"query": "What is AC-2?"}
+    response = client.post("/compliance", json=request)
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["answer"] == payload["text"]
     assert payload["source"] == payload["framework"]
+
+    cached = client.post("/compliance", json=request)
+    assert cached.status_code == 200
+    assert cached.json()["cached"] is True
+    assert cached.json()["answer"] == payload["answer"]
+
+
+def test_cache_evicts_oldest_entry_and_preserves_non_cache_files(tmp_path):
+    cache_dir = tmp_path / "cache"
+    cache = main.SimpleCache(str(cache_dir), max_entries=2, max_bytes=4096)
+    value = {"text": "fixture", "framework": "NIST SP 800-53 Rev. 5"}
+
+    cache.set("first", value)
+    first_path = cache_dir / f"{cache._cache_key('first')}.json"
+    cache.set("second", value)
+    second_path = cache_dir / f"{cache._cache_key('second')}.json"
+    os.utime(first_path, (1, 1))
+    os.utime(second_path, (2, 2))
+    unrelated = cache_dir / "keep-me.json"
+    unrelated.write_text("outside cache filename", encoding="utf-8")
+
+    cache.set("third", value)
+    third_path = cache_dir / f"{cache._cache_key('third')}.json"
+
+    assert not first_path.exists()
+    assert second_path.exists()
+    assert third_path.exists()
+    assert unrelated.exists()
+    assert len(list(cache_dir.glob("*.json"))) == 3
+
+
+def test_cache_evicts_by_byte_limit(tmp_path):
+    cache_dir = tmp_path / "cache"
+    cache = main.SimpleCache(str(cache_dir), max_entries=10, max_bytes=100)
+    value = {"text": "x" * 60}
+
+    cache.set("first-bytes", value)
+    first_path = cache_dir / f"{cache._cache_key('first-bytes')}.json"
+    os.utime(first_path, (1, 1))
+    cache.set("second-bytes", value)
+    second_path = cache_dir / f"{cache._cache_key('second-bytes')}.json"
+
+    assert not first_path.exists()
+    assert second_path.exists()
+    assert sum(path.stat().st_size for path in cache_dir.glob("*.json")) <= 100
 
 
 def test_body_limit_is_enforced_before_validation(client):

@@ -104,7 +104,9 @@ These are implementation limits, not a complete security boundary:
 - analysis/generation paths allow 10 requests per client per minute;
 - feedback allows 5 requests per client per minute;
 - exact-match responses are cached under `/tmp/compliance_cache` (override with
-  `COMPLIANCE_GUARD_CACHE_DIR`);
+  `COMPLIANCE_GUARD_CACHE_DIR`); entries are capped at 1,000 / 64 MiB by
+  default (override with `COMPLIANCE_GUARD_CACHE_MAX_ENTRIES` and
+  `COMPLIANCE_GUARD_CACHE_MAX_BYTES`) and evicted deterministically;
 - there is no authentication, authorization, tenant isolation, durable audit
   trail, or network-facing deployment hardening in this repository.
 
