@@ -1,462 +1,164 @@
-# Compliance Guard v3.1
+# Compliance Guard v3.2.0
 
-Automated NIST Compliance Analysis using Fine-Tuned LLM with Production-Grade Infrastructure
+Compliance Guard is a small FastAPI service that returns structured,
+NIST-oriented analysis guidance. The v3.2.0 API has one canonical entrypoint:
+`src.api.main:app`.
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-latest-green.svg)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+The default backend is a deterministic fixture backend. It makes the API
+usable and testable without CUDA, model downloads, or credentials. The real
+Mistral + LoRA backend remains available as an explicit, lazy-loaded option;
+its manual canary is still pending for this release.
 
----
+## What is and is not verified
 
-## Table of Contents
+The fake backend verifies request/response contracts, caching, limits, and
+fixture plumbing. It is not a compliance evaluator and its output must not be
+used as evidence of control implementation.
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Features](#features)
-- [Performance Metrics](#performance-metrics)
-- [Installation](#installation)
-- [API Reference](#api-reference)
-- [Monitoring](#monitoring)
-- [System Validation](#system-validation)
-- [License](#license)
+The real backend can produce model-generated guidance, but this repository
+does not claim accuracy, coverage, latency, security, or production readiness.
+Responses are advisory and require review against the applicable NIST source,
+organizational policy, and local evidence. See
+[`docs/GPU_CANARY.md`](docs/GPU_CANARY.md) for the separate manual gate.
 
----
+## Quickstart (CPU-only)
 
-## Overview
+Python 3.9+ is supported. In a clean environment:
 
-Compliance Guard automates NIST cybersecurity compliance analysis using a fine-tuned Mistral-7B language model with LoRA adapters. The system implements production-grade patterns including 4-bit quantization, intelligent caching, rate limiting, and comprehensive observability.
-
-### Technical Stack
-
-**Model Architecture**
-- Base Model: Mistral-7B-v0.1
-- Fine-Tuning: LoRA (PEFT) adapters
-- Quantization: 4-bit BitsAndBytes (15GB → 5GB VRAM)
-- Training: 1000 steps, final loss 0.45
-
-**Backend Infrastructure**
-- API Framework: FastAPI + Uvicorn
-- Rate Limiting: SlowAPI (10 req/min per IP)
-- Caching: MD5-based disk cache
-- Vector Store: FAISS (local index)
-
-**Observability Stack**
-- Metrics: Prometheus
-- Visualization: Grafana
-- Logging: Structured Python logging
-
-**Deployment**
-- Containerization: Docker + Docker Compose
-- Infrastructure: AWS G4DN (NVIDIA Tesla T4)
-- OS: Amazon Linux 2
-
----
-
-## Architecture
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Client Application                       │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                FastAPI Server (Port 8000)                    │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ Rate Limiter │→ │ Cache Layer  │→ │  Validation  │      │
-│  │  (SlowAPI)   │  │   (MD5/Disk) │  │  (Keywords)  │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-│                           │                                  │
-│                           ▼                                  │
-│                  ┌─────────────────┐                        │
-│                  │  Mistral-7B     │                        │
-│                  │  4-bit Quant    │                        │
-│                  │  + LoRA         │                        │
-│                  └─────────────────┘                        │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-        ┌─────────────┴─────────────┐
-        ▼                           ▼
-┌───────────────┐         ┌──────────────┐
-│  Prometheus   │────────▶│   Grafana    │
-│  (Port 9090)  │         │ (Port 3000)  │
-└───────────────┘         └──────────────┘
-```
-
-### System Components
-
-**1. API Server (compliance-guard-v3)**
-- Handles inference requests
-- Implements security validations
-- Manages cache operations
-- Exposes Prometheus metrics
-
-**2. Prometheus**
-- Scrapes metrics every 60 seconds
-- Stores time-series data
-- Retention: 30 days
-
-**3. Grafana**
-- Real-time dashboard visualization
-- Pre-configured datasource
-- Credentials: set GF_SECURITY_ADMIN_USER and GF_SECURITY_ADMIN_PASSWORD
-
----
-
-## Features
-
-### Security & Validation
-
-**Rate Limiting**
-- 10 requests per minute per IP address
-- Automatic 429 response on limit exceeded
-
-**Input Validation**
-- Maximum input length: 500 characters
-- Forbidden keyword detection: ["ignore", "jailbreak", "system", "instructions"]
-- Graceful degradation on model failure (503 Service Unavailable)
-
-### Performance Optimization
-
-**4-bit Quantization**
-- Reduces VRAM usage from 15GB to 5GB
-- Enables deployment on single G4DN instance
-- Configuration: NF4 with double quantization
-
-**Intelligent Caching**
-- MD5-based exact match caching
-- Disk-persistent cache storage
-- Latency reduction: 8.6s → 0.01s for cached queries
-
-**LoRA Adapters**
-- Parameter-efficient fine-tuning
-- Adapter size: 52MB
-- Domain-specific compliance knowledge
-
-### Observability
-
-**Prometheus Metrics**
-- `compliance_request_total`: Total requests by method, endpoint, status
-- `compliance_latency_seconds`: Inference duration histogram
-- `cache_hit_total`: Cache hit counter
-- `cache_miss_total`: Cache miss counter
-- `user_feedback_total`: Feedback submissions by rating
-- `active_requests`: Current concurrent requests
-
-**Health Monitoring**
-- `/health` endpoint with Docker healthcheck integration
-- 30-second interval checks with 3 retries
-- 60-second startup grace period
-
----
-
-## Performance Metrics
-
-### Validation Results
-
-**Golden Set Evaluation (50 test cases)**
-- Success Rate: 96.0% (48/50 passed)
-- Failed Cases: 2
-- Average Latency: 8.62 seconds (cold start)
-- Cached Latency: ~0.01 seconds
-
-### Resource Utilization
-
-| Metric | Value |
-|--------|-------|
-| Container Memory Usage | 13.9GB / 15GB (92.6%) |
-| Model Size (Quantized) | ~5GB VRAM |
-| Model Size (Full Precision) | 15GB |
-| LoRA Adapter Size | 52MB |
-| CPU Usage | ~30% |
-| Active PIDs | 17 |
-
-### Training Metrics
-
-| Metric | Value |
-|--------|-------|
-| Total Steps | 1000 |
-| Final Loss | 0.45 |
-| Dataset Size | 50 chunks |
-| Checkpoints | 2 (step-25, step-50) |
-
----
-
-## Installation
-
-### Prerequisites
-
-- Docker 20.10+
-- Docker Compose 1.29+
-- NVIDIA GPU with CUDA support
-- NVIDIA Docker Runtime
-- 20GB free disk space
-- 16GB RAM minimum
-
-### Quick Start
-
-**1. Clone Repository**
 ```bash
-git clone https://github.com/cesaremcasa/Compliance-Guard.git
-cd Compliance-Guard
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+COMPLIANCE_GUARD_BACKEND=fake uvicorn src.api.main:app --host 127.0.0.1 --port 8000
 ```
 
-**2. Build and Start Services**
+In another shell:
+
 ```bash
-docker-compose up -d --build
+curl -s http://127.0.0.1:8000/health
+curl -s -X POST http://127.0.0.1:8000/analyze \
+  -H 'content-type: application/json' \
+  -d '{"text":"Describe the access control requirements in AC-2."}'
 ```
 
-**3. Verify Deployment**
-```bash
-# Check container status
-docker-compose ps
+`/health` is a liveness endpoint and does not load a model or require a GPU.
+The first fake analysis loads only a small JSON fixture.
 
-# Verify health endpoint
-curl http://localhost:8000/health
+The older FAISS/LangChain ingestion adapters are not needed by the canonical
+API. Install `requirements-rag.txt` only when using those legacy tools.
 
-# Expected output:
-# {"status":"healthy","model_loaded":true}
+## API
+
+### `POST /analyze`
+
+Request:
+
+```json
+{"text":"Describe the access control requirements in AC-2."}
 ```
 
-**4. Run Validation Tests**
-```bash
-python3 scripts/run_batch_validation.py
-```
+Response fields:
 
-### Container Services
-
-| Service | Port | Description |
-|---------|------|-------------|
-| app | 8000 | FastAPI application |
-| prometheus | 9090 | Metrics scraper |
-| grafana | 3000 | Dashboard (admin/admin) |
-
----
-
-## API Reference
-
-### POST /generate
-
-Generate compliance analysis response.
-
-**Request Body**
 ```json
 {
-  "text": "What are the access control requirements for AC-2?"
-}
-```
-
-**Response**
-```json
-{
-  "request_id": "a3f2c1b8e4d5",
-  "generated_text": "AC-2 requires organizations to...",
+  "request_id": "…",
+  "text": "…",
+  "framework": "NIST SP 800-53 Rev. 5",
+  "findings": [
+    {"control_id": "AC-2", "status": "not_evaluated", "summary": "…"}
+  ],
+  "citations": [
+    {"source": "NIST SP 800-53 Rev. 5", "control_id": "AC-2", "locator": "AC-2"}
+  ],
+  "backend": "fake",
   "cached": false,
-  "latency_seconds": 8.2341
+  "latency_seconds": 0.0001
 }
 ```
 
-**Status Codes**
-- 200: Success
-- 400: Invalid input (length exceeded or forbidden keywords)
-- 429: Rate limit exceeded
-- 503: Model not loaded
+`findings` and `citations` are structured metadata, not independently
+verified evidence. `framework` currently identifies the intended NIST source;
+callers must verify the source and locator.
 
-### POST /feedback
+### `POST /generate` (deprecated compatibility adapter)
 
-Submit user feedback for continuous improvement.
+`/generate` remains available for one release. It accepts the former
+`{"text":"…"}` request and keeps `generated_text`, `request_id`, `cached`, and
+`latency_seconds`, while also returning the `/analyze` fields. The response
+contains `Deprecation: true` and `X-Compliance-Guard-Deprecated: true`. New
+clients should use `/analyze`.
 
-**Request Body**
-```json
-{
-  "request_id": "a3f2c1b8e4d5",
-  "rating": 5,
-  "comment": "Accurate and comprehensive response"
-}
+The former `POST /compliance` (`query` request, `answer`/`source` response) is
+also retained as a deprecated adapter for existing callers.
+
+`GET /metrics`, `POST /feedback`, and `GET /stats` remain available. Feedback
+is a bounded local JSONL store and is not a training pipeline.
+
+## Runtime limits
+
+These are implementation limits, not a complete security boundary:
+
+- request bodies on analysis/generation/feedback paths are capped at 16 KiB;
+- text input is capped at 500 characters;
+- analysis/generation paths allow 10 requests per client per minute;
+- feedback allows 5 requests per client per minute;
+- exact-match responses are cached under `/tmp/compliance_cache` (override with
+  `COMPLIANCE_GUARD_CACHE_DIR`);
+- there is no authentication, authorization, tenant isolation, durable audit
+  trail, or network-facing deployment hardening in this repository.
+
+The service should run behind an appropriately configured gateway and should
+not be treated as an internet-facing compliance authority. No keyword
+blacklist is presented as a prompt-injection or security defense.
+
+## Backend selection
+
+Set `COMPLIANCE_GUARD_BACKEND=fake` (the default) for local work. To use the
+real backend, install the optional dependencies and set
+`COMPLIANCE_GUARD_BACKEND=real`:
+
+```bash
+python -m pip install -r requirements-gpu.txt
+COMPLIANCE_GUARD_BACKEND=real uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 ```
 
-**Response**
-```json
-{
-  "status": "success",
-  "message": "Feedback received. Thank you!"
-}
+The real backend requires CUDA by default, downloads/loads the configured base
+model lazily on the first request, and applies the LoRA adapter at
+`models/checkpoints` by default. Configure `COMPLIANCE_GUARD_BASE_MODEL`,
+`COMPLIANCE_GUARD_LORA_ADAPTER`, and `COMPLIANCE_GUARD_TOKENIZER` as needed.
+Model-provider credentials are supplied through the operator's environment;
+none are stored here.
+
+## Golden set and tests
+
+Run the deterministic golden set without starting a server:
+
+```bash
+python3 scripts/run_golden_set.py
 ```
 
-**Constraints**
-- Rating: Integer between 1 and 5
-- Comment: Optional string
+This reports deterministic fixture/contract checks for the checked-in
+`tests/golden_set.json`; it is not a semantic accuracy score. Run the unit
+tests with `pytest -q`.
 
-### GET /health
+The older `scripts/run_batch_validation.py` remains as a server-based
+`/generate` compatibility check.
 
-Health check endpoint for container orchestration.
+## Docker
 
-**Response**
-```json
-{
-  "status": "healthy",
-  "model_loaded": true
-}
-```
+The Docker image still includes the optional GPU stack for operators who need
+the real backend, but starts the canonical API and defaults to the fake
+backend. Set `COMPLIANCE_GUARD_BACKEND=real` explicitly for a model-serving
+deployment. The Compose monitoring services are optional and require the
+non-default Grafana credentials in `.env`.
 
-### GET /metrics
+## Repository adapters
 
-Prometheus-compatible metrics endpoint.
-
-**Response Format**: Prometheus text exposition format
-
-### GET /stats
-
-Internal statistics endpoint.
-
-**Response**
-```json
-{
-  "cache_entries": 42,
-  "model_loaded": true,
-  "device": "cuda"
-}
-```
-
----
-
-## Monitoring
-
-### Grafana Dashboard
-
-Access at `http://localhost:3000`
-
-**Default Credentials**
-- Username: from GF_SECURITY_ADMIN_USER
-- Password: from GF_SECURITY_ADMIN_PASSWORD
-
-**Available Metrics**
-- Request rate (req/s)
-- Latency percentiles (p50, p95, p99)
-- Cache hit rate
-- Error rate by status code
-- Active requests gauge
-
-### Prometheus Queries
-
-**Cache Hit Rate**
-```promql
-rate(cache_hit_total[5m]) / 
-(rate(cache_hit_total[5m]) + rate(cache_miss_total[5m]))
-```
-
-**Average Latency**
-```promql
-rate(compliance_latency_seconds_sum[5m]) / 
-rate(compliance_latency_seconds_count[5m])
-```
-
-**Request Throughput**
-```promql
-sum(rate(compliance_request_total[1m])) by (status)
-```
-
----
-
-## Project Structure
-```
-Compliance-Guard/
-├── src/
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── final_server_v3.py       # Main API server
-│   │   └── simple_server_v2.py      # Simplified version
-│   ├── rag/
-│   │   ├── __init__.py
-│   │   ├── ingest.py                # Document ingestion
-│   │   └── retriever.py             # FAISS retrieval
-│   └── training/
-│       ├── generate_dataset.py      # Dataset creation
-│       └── train.py                 # LoRA fine-tuning
-├── models/
-│   └── checkpoints/                 # LoRA adapters
-│       ├── adapter_config.json
-│       ├── adapter_model.safetensors
-│       └── checkpoint-{25,50}/
-├── data/
-│   └── processed/
-│       └── faiss_index.bin/         # Vector index
-├── tests/
-│   └── golden_set.json              # Validation dataset
-├── scripts/
-│   └── run_batch_validation.py      # Test runner
-├── docker-compose.yml               # Service orchestration
-├── Dockerfile                       # Container image
-├── prometheus.yml                   # Metrics configuration
-├── requirements.txt                 # Python dependencies
-└── README.md
-```
-
----
-
-## System Validation
-
-### Production Deployment Status
-
-![System Audit](system-audit.png)
-
-### GPU Resource Utilization
-
-![GPU Utilization](gpu-utilization.png)
-
-
----
-
-## Technical Debt & Known Issues
-
-**Limitations**
-- Single GPU instance (no horizontal scaling)
-- Disk I/O bottleneck under high concurrency (mitigated via 4-bit quantization)
-- Cache lacks TTL mechanism (manual cleanup required)
-
-**Mitigation Strategies**
-- 4-bit quantization reduces memory pressure
-- Rate limiting prevents resource exhaustion
-- Health checks enable automatic restart on failure
-
----
+Older server/launcher files remain in `src/api/` and at the repository root for
+callers that still reference them. They are not additional supported API
+entrypoints; deployments should use `src.api.main:app`.
 
 ## License
 
-MIT License
-
-Copyright (c) 2026 Cesar Augusto
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----
-
-## Author
-
-**Cesar Augusto**  
-AI Systems Engineer  
-[GitHub](https://github.com/cesaremcasa) | [Email](mailto:cesardonahill3@gmail.com)
-
-Specializing in Agentic AI, LLM orchestration, and production ML systems.
-
----
-
-**System Status**: Production Ready  
-**Last Updated**: January 2026  
-**Documentation Version**: 3.1
+MIT. See [`LICENSE`](LICENSE).
